@@ -1,40 +1,22 @@
 //
-//  File.swift
+//  RecommendedTracksCollectionView.swift
 //  iOSAcademySpotify
 //
-//  Created by Felipe Lima de Carvalho (P) on 15/04/22.
+//  Created by Felipe Lima de Carvalho (P) on 12/05/22.
 //
 
 import UIKit
 
-extension UIView {
-    var width: CGFloat {
-        return frame.size.width
+// MARK: - Recommended Tracks Collection View Layout
+class RecommendedTracksCollectionView: UIViewController {
+    
+    static let shared = RecommendedTracksCollectionView()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
     }
     
-    var height: CGFloat {
-        return frame.size.height
-    }
-    
-    var left: CGFloat {
-        return frame.origin.x
-    }
-    
-    var right: CGFloat {
-        return left + width
-    }
-    
-    var top: CGFloat {
-        return frame.origin.y
-    }
-    
-    var bottom: CGFloat {
-        return top + height
-    }
-}
-
-extension UICollectionView {
-    var dafaultSectionLayout: NSCollectionLayoutSection {
+    func setCollectionViewLayout() -> NSCollectionLayoutSection {
         let item = NSCollectionLayoutItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
@@ -46,13 +28,18 @@ extension UICollectionView {
         let group = NSCollectionLayoutGroup.vertical(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(390)
+                heightDimension: .absolute(80)
             ),
             subitem: item,
             count: 1
         )
-        
         let section = NSCollectionLayoutSection(group: group)
         return section
     }
 }
+
+// MARK: - Recommended Tracks Cell
+class RecommendedTrackCollectionViewCell: UICollectionViewCell {
+    static let identifier = "RecommendedTrackCollectionViewCell"
+}
+

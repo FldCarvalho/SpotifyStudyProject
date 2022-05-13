@@ -7,10 +7,14 @@
 
 import UIKit
 
+protocol HomeDisplayLogic: AnyObject {
+    func displayNewReleases(viewModels: [NewReleases.Releases.ViewModel])
+}
+
 enum BrowseSectionType {
-    case newReleases(viewModels: [NewReleasesCellViewModel])
-    case featuredPlaylists(viewModels: [NewReleasesCellViewModel])
-    case recommendedTracks(viewModels: [NewReleasesCellViewModel])
+    case newReleases(viewModels: [NewReleases.Releases.ViewModel])
+    case featuredPlaylists(viewModels: [NewReleases.Releases.ViewModel])
+    case recommendedTracks(viewModels: [NewReleases.Releases.ViewModel])
 }
 
 class HomeViewController: UIViewController {
@@ -37,13 +41,16 @@ class HomeViewController: UIViewController {
         return spinner
     }()
     
+    // MARK: - Variables
+    fileprivate var newReleaseInteractor: NewReleasesBusinessLogic?
     private var sections = [BrowseSectionType]()
 
     // MARK: - View Cycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        setup()
         setupView()
-        fetchData()
+        newReleaseInteractor?.doNewReleases()
     }
     
     override func viewDidLayoutSubviews() {
@@ -52,41 +59,24 @@ class HomeViewController: UIViewController {
     }
     
     // MARK: Private Functions
-    private func fetchData() {
-        let group = DispatchGroup()
-        group.enter()
-        group.enter()
-        group.enter()
-        
-        var newReleases: NewReleasesResponse?
-        var featuredPlaylists: FeaturedPlaylistsResponse?
-        var recommendedTracks: RecommendationsResponse?
+    private func setup() {
+        let viewController = self
         
         // New Releases
-        APICaller.shared.getAPI(request: GenericGetModel.Model.Request<NewReleasesResponse>.init(endpoint: APIEndpoints.newReleases.rawValue + "?limit=50", completion: { result in
-            defer {
-                group.leave()
-            }
-            
-            switch result {
-            case .success(let model):
-                newReleases = model
-            case . failure(let error):
-                print("ERROR: \(error.localizedDescription)")
-            }
-        }))
-        
+        let newReleaseInteractor = NewReleasesInteractor()
+        let newReleasePresenter = NewReleasesPresenter()
+        viewController.newReleaseInteractor = newReleaseInteractor
+        newReleaseInteractor.presenter = newReleasePresenter
+        newReleasePresenter.viewController = viewController
+    }
+    
+    private func fetchData() {
         // Features Playlists
         APICaller.shared.getAPI(request: GenericGetModel.Model.Request<FeaturedPlaylistsResponse>.init(endpoint: APIEndpoints.featuredPlaylists.rawValue, completion: { result in
-            defer {
-                group.leave()
-            }
             
             switch result {
-            case .success(let model):
-                featuredPlaylists = model
-            case . failure(let error):
-                print("ERROR: \(error.localizedDescription)")
+            case .success(let model): break
+            case .failure(let error): break
             }
         }))
         
@@ -103,54 +93,38 @@ class HomeViewController: UIViewController {
                 }
 
                 APICaller.shared.getAPI(request: GenericGetModel.Model.Request<RecommendationsResponse>.init(endpoint: APIEndpoints.recommendations.rawValue + seeds.joined(separator: ","), completion: { result in
-                    defer {
-                        group.leave()
-                    }
-                    
                     switch result {
-                    case .success(let model):
-                        recommendedTracks = model
-                    case . failure(let error):
-                        print("ERROR: \(error.localizedDescription)")
+                    case .success(let model): break
+                    case .failure(let error): break
                     }
                 }))
 
-            case . failure(let error):
-                print("ERROR: \(error.localizedDescription)")
+            case .failure(let error): break
             }
         }))
-        
-        group.notify(queue: .main) {
-            guard let newAlbums = newReleases?.albums.items,
-                  let playlists = featuredPlaylists?.playlists.items,
-                  let tracks = recommendedTracks?.tracks else {
-                      return
-                  }
-            self.configureModels(newAlbums: newAlbums, playlists: playlists, tracks: tracks)
-        }
     }
     
     // Mudar
-    private func configureModels(newAlbums: [Album], playlists: [Playlist], tracks: [AudioTrack]) {
-        // Configure Models
-        sections.append(.newReleases(viewModels: newAlbums.compactMap({
-            return NewReleasesCellViewModel(
-                name: $0.name,
-                artworkURL: URL(string: $0.images.first?.url ?? ""),
-                numberOfTracks: $0.total_tracks,
-                artistName: $0.artists.first?.name ?? "-"
-            )
-        })))
-        sections.append(.featuredPlaylists(viewModels: []))
-        sections.append(.recommendedTracks(viewModels: []))
-        collectionView.reloadData()
-    }
+//    private func configureModels(newAlbums: [Album], playlists: [Playlist], tracks: [AudioTrack]) {
+//        // Configure Models
+//        sections.append(.newReleases(viewModels: newAlbums.compactMap({
+//            return NewReleasesCellViewModel(
+//                name: $0.name,
+//                artworkURL: URL(string: $0.images.first?.url ?? ""),
+//                numberOfTracks: $0.total_tracks,
+//                artistName: $0.artists.first?.name ?? "-"
+//            )
+//        })))
+//        sections.append(.featuredPlaylists(viewModels: []))
+//        sections.append(.recommendedTracks(viewModels: []))
+//        collectionView.reloadData()
+//    }
     
     private func createSectionLayout() -> UICollectionViewCompositionalLayout {
         return UICollectionViewCompositionalLayout(sectionProvider: { sectionIndex, _ -> NSCollectionLayoutSection? in
             switch sectionIndex {
             case 0:
-                return NewReleaseCollectionView.shared.setCollectionViewLayout()
+                return NewReleasesCollectionView.shared.setCollectionViewLayout()
             case 1:
                 return FeaturedPlaylistsCollectionView.shared.setCollectionViewLayout()
             case 2:
@@ -167,8 +141,8 @@ class HomeViewController: UIViewController {
             forCellWithReuseIdentifier: "cell"
         )
         collectionView.register(
-            NewReleaseCollectionViewCell.self,
-            forCellWithReuseIdentifier: NewReleaseCollectionViewCell.identifier
+            NewReleasesCollectionViewCell.self,
+            forCellWithReuseIdentifier: NewReleasesCollectionViewCell.identifier
         )
         collectionView.register(
             FeaturedPlaylistCollectionViewCell.self,
@@ -188,6 +162,7 @@ class HomeViewController: UIViewController {
     }
 }
 
+// MARK: - View Code
 extension HomeViewController: iOSViewCode {
     func setupHierarchy() {
         view.addSubview(collectionView)
@@ -203,7 +178,7 @@ extension HomeViewController: iOSViewCode {
     }
 }
 
-
+// MARK: - Collection View
 extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         let type = sections[section]
@@ -227,33 +202,34 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
         
         switch type {
         case .newReleases(let viewModels):
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: NewReleaseCollectionViewCell.identifier,
-                for: indexPath
-            ) as? NewReleaseCollectionViewCell else {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NewReleasesCollectionViewCell.identifier, for: indexPath) as? NewReleasesCollectionViewCell else {
                 return UICollectionViewCell()
             }
             let viewModel = viewModels[indexPath.row]
             cell.configure(with: viewModel)
             return cell
         case .featuredPlaylists(let viewModels):
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: FeaturedPlaylistCollectionViewCell.identifier,
-                for: indexPath
-            ) as? FeaturedPlaylistCollectionViewCell else {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeaturedPlaylistCollectionViewCell.identifier, for: indexPath) as? FeaturedPlaylistCollectionViewCell else {
                 return UICollectionViewCell()
             }
             cell.backgroundColor = .blue
             return cell
         case .recommendedTracks(let viewModels):
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: RecommendedTrackCollectionViewCell.identifier,
-                for: indexPath
-            ) as? RecommendedTrackCollectionViewCell else {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: RecommendedTrackCollectionViewCell.identifier, for: indexPath) as? RecommendedTrackCollectionViewCell else {
                 return UICollectionViewCell()
             }
             cell.backgroundColor = .orange
             return cell
+        }
+    }
+}
+
+// MARK: - Home Display Logic
+extension HomeViewController: HomeDisplayLogic {
+    func displayNewReleases(viewModels: [NewReleases.Releases.ViewModel]) {
+        DispatchQueue.main.async {
+            self.sections.append(.newReleases(viewModels: viewModels))
+            self.collectionView.reloadData()
         }
     }
 }

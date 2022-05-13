@@ -1,5 +1,5 @@
 //
-//  NewReleaseCollectionView.swift
+//  NewReleasesCollectionView.swift
 //  iOSAcademySpotify
 //
 //  Created by Felipe Lima de Carvalho (P) on 12/05/22.
@@ -9,9 +9,9 @@ import UIKit
 import SDWebImage
 
 // MARK: - New Releases Collection View Layout
-class NewReleaseCollectionView: UIViewController {
+class NewReleasesCollectionView: UIViewController {
     
-    static let shared = NewReleaseCollectionView()
+    static let shared = NewReleasesCollectionView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,7 +54,7 @@ class NewReleaseCollectionView: UIViewController {
 }
 
 // MARK: - New Releases Cell
-class NewReleaseCollectionViewCell: UICollectionViewCell {
+class NewReleasesCollectionViewCell: UICollectionViewCell {
     static let identifier = "NewReleaseCollectionViewCell"
     
     private lazy var albumCoverImageView: UIImageView = {
@@ -116,7 +116,7 @@ class NewReleaseCollectionViewCell: UICollectionViewCell {
         albumCoverImageView.image = nil
     }
     
-    func configure(with viewModel: NewReleasesCellViewModel) {
+    func configure(with viewModel: NewReleases.Releases.ViewModel) {
         albumNameLabel.text = viewModel.name
         artistNameLabel.text = viewModel.artistName
         numberOfTracksLabel.text = "Tracks: \(viewModel.numberOfTracks)"

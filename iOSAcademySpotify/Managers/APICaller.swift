@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class APICaller {
+class APICaller {
     
     // MARK: - Properties
     static let shared = APICaller()

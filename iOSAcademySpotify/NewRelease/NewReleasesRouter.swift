@@ -1,5 +1,5 @@
 //
-//  NewReleasePresenter.swift
+//  NewReleasesRouter.swift
 //  iOSAcademySpotify
 //
 //  Created by Felipe Lima de Carvalho (P) on 11/05/22.

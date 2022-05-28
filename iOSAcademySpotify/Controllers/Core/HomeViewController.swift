@@ -9,6 +9,7 @@ import UIKit
 
 protocol HomeDisplayLogic: AnyObject {
     func displayNewReleases(viewModels: [NewReleases.Releases.ViewModel])
+    func displayNewReleasesError(viewModel: NewReleases.Releases.ViewModelError)
 }
 
 enum BrowseSectionType {
@@ -43,6 +44,8 @@ class HomeViewController: UIViewController {
     
     // MARK: - Variables
     fileprivate var newReleaseInteractor: NewReleasesBusinessLogic?
+    fileprivate var recommendedTracksInteractor: RecommendedTracksBusinessLogic?
+    fileprivate var featuredPlaylistsInteractor: FeaturedPlaylistsBusinessLogic?
     private var sections = [BrowseSectionType]()
 
     // MARK: - View Cycle
@@ -51,6 +54,8 @@ class HomeViewController: UIViewController {
         setup()
         setupView()
         newReleaseInteractor?.doNewReleases()
+        recommendedTracksInteractor?.doRecommendedGenres()
+        featuredPlaylistsInteractor?.doFeaturedPlaylists()
     }
     
     override func viewDidLayoutSubviews() {
@@ -68,40 +73,20 @@ class HomeViewController: UIViewController {
         viewController.newReleaseInteractor = newReleaseInteractor
         newReleaseInteractor.presenter = newReleasePresenter
         newReleasePresenter.viewController = viewController
-    }
-    
-    private func fetchData() {
-        // Features Playlists
-        APICaller.shared.getAPI(request: GenericGetModel.Model.Request<FeaturedPlaylistsResponse>.init(endpoint: APIEndpoints.featuredPlaylists.rawValue, completion: { result in
-            
-            switch result {
-            case .success(let model): break
-            case .failure(let error): break
-            }
-        }))
         
-        // Recommended Tracks
-        APICaller.shared.getAPI(request: GenericGetModel.Model.Request<RecommendedGenresResponse>.init(endpoint: APIEndpoints.recommendedGenres.rawValue, completion: { result in
-            switch result {
-            case .success(let model):
-                let genres = model.genres
-                var seeds = Set<String>()
-                while seeds.count < 5 {
-                    if let random = genres.randomElement() {
-                        seeds.insert(random)
-                    }
-                }
-
-                APICaller.shared.getAPI(request: GenericGetModel.Model.Request<RecommendationsResponse>.init(endpoint: APIEndpoints.recommendations.rawValue + seeds.joined(separator: ","), completion: { result in
-                    switch result {
-                    case .success(let model): break
-                    case .failure(let error): break
-                    }
-                }))
-
-            case .failure(let error): break
-            }
-        }))
+        // RecommendedTracks
+        let recommendedTracksInteractor = RecommendedTracksInteractor()
+        let recommendedTracksPresenter = RecommendedTracksPresenter()
+        viewController.recommendedTracksInteractor = recommendedTracksInteractor
+        recommendedTracksInteractor.presenter = recommendedTracksPresenter
+        recommendedTracksPresenter.viewController = viewController
+        
+        // FeaturedPlaylists
+        let featuredPlaylistsInteractor = FeaturedPlaylistsInteractor()
+        let featuredPlaylistsPresenter = FeaturedPlaylistsPresenter()
+        viewController.featuredPlaylistsInteractor = featuredPlaylistsInteractor
+        featuredPlaylistsInteractor.presenter = featuredPlaylistsPresenter
+        featuredPlaylistsPresenter.viewController = viewController
     }
     
     // Mudar
@@ -230,6 +215,17 @@ extension HomeViewController: HomeDisplayLogic {
         DispatchQueue.main.async {
             self.sections.append(.newReleases(viewModels: viewModels))
             self.collectionView.reloadData()
+        }
+    }
+    
+    func displayNewReleasesError(viewModel: NewReleases.Releases.ViewModelError) {
+        DispatchQueue.main.async {
+            let label = UILabel(frame: .zero)
+            label.text = "Indisponibiidade no sistema, erro na busca das new releases. Tente novamente :/"
+            label.sizeToFit()
+            label.textColor = .secondaryLabel
+            self.view.addSubview(label)
+            label.center = self.view.center
         }
     }
 }

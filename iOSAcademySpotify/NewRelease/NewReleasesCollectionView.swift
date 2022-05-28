@@ -7,15 +7,12 @@
 
 import UIKit
 import SDWebImage
+import SnapKit
 
 // MARK: - New Releases Collection View Layout
-class NewReleasesCollectionView: UIViewController {
+class NewReleasesCollectionView {
     
     static let shared = NewReleasesCollectionView()
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
     
     func setCollectionViewLayout() -> NSCollectionLayoutSection {
         // Item
@@ -61,37 +58,38 @@ class NewReleasesCollectionViewCell: UICollectionViewCell {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "photo")
         imageView.contentMode = .scaleAspectFill
+        imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
     
     private lazy var albumNameLabel: UILabel = {
        let label = UILabel()
         label.font = .systemFont(ofSize: 22, weight: .semibold)
-        label.numberOfLines = 0
+        label.numberOfLines = 2
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private lazy var artistNameLabel: UILabel = {
        let label = UILabel()
-        label.font = .systemFont(ofSize: 18, weight: .regular)
+        label.font = .systemFont(ofSize: 16, weight: .regular)
         label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private lazy var numberOfTracksLabel: UILabel = {
        let label = UILabel()
-        label.font = .systemFont(ofSize: 18, weight: .regular)
+        label.font = .systemFont(ofSize: 14, weight: .light)
         label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     override init(frame: CGRect) {
         super.init(frame: .zero)
-        contentView.backgroundColor = .secondarySystemBackground
-        contentView.addSubview(albumCoverImageView)
-        contentView.addSubview(albumNameLabel)
-        contentView.addSubview(artistNameLabel)
-        contentView.addSubview(numberOfTracksLabel)
+        setContentView()
+        setConstraints()
     }
     
     required init?(coder: NSCoder) {
@@ -100,12 +98,6 @@ class NewReleasesCollectionViewCell: UICollectionViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        albumNameLabel.sizeToFit()
-        artistNameLabel.sizeToFit()
-        numberOfTracksLabel.sizeToFit()
-        
-        let imageSize: CGFloat = contentView.frame.height-10
-        albumCoverImageView.frame = CGRect(x: 5, y: 5, width: imageSize, height: imageSize)
     }
     
     override func prepareForReuse() {
@@ -121,6 +113,35 @@ class NewReleasesCollectionViewCell: UICollectionViewCell {
         artistNameLabel.text = viewModel.artistName
         numberOfTracksLabel.text = "Tracks: \(viewModel.numberOfTracks)"
         albumCoverImageView.sd_setImage(with: viewModel.artworkURL, completed: nil)
+    }
+    
+    private func setContentView() {
+        contentView.backgroundColor = .secondarySystemBackground
+        contentView.addSubview(albumCoverImageView)
+        contentView.addSubview(albumNameLabel)
+        contentView.addSubview(artistNameLabel)
+        contentView.addSubview(numberOfTracksLabel)
+        contentView.clipsToBounds = true
+    }
+    
+    private func setConstraints() {
+        albumCoverImageView.snp.makeConstraints { make in
+            make.leading.top.bottom.equalToSuperview().inset(5)
+            make.trailing.equalToSuperview().inset(220)
+        }
+        albumNameLabel.snp.makeConstraints { make in
+            make.leading.equalTo(albumCoverImageView.snp.trailing).offset(10)
+            make.trailing.equalToSuperview().inset(5)
+            make.top.equalTo(albumCoverImageView)
+        }
+        artistNameLabel.snp.makeConstraints { make in
+            make.leading.equalTo(albumCoverImageView.snp.trailing).offset(10)
+            make.top.equalTo(albumNameLabel.snp.bottom).offset(5)
+        }
+        numberOfTracksLabel.snp.makeConstraints { make in
+            make.leading.equalTo(albumCoverImageView.snp.trailing).offset(10)
+            make.bottom.equalTo(albumCoverImageView).inset(10)
+        }
     }
 }
 

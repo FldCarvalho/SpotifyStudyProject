@@ -5,4 +5,8 @@
 //  Created by Felipe Lima de Carvalho (P) on 12/05/22.
 //
 
-import Foundation
+import UIKit
+
+class RecommendedTracksWorker: APICaller {
+    
+}

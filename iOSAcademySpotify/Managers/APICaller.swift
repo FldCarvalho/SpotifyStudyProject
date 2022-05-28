@@ -7,6 +7,10 @@
 
 import UIKit
 
+protocol APICallerProtocol {
+    func getAPI<T: Codable>(recall: Int, request: GenericGetModel.Model.Request<T>)
+}
+
 class APICaller {
     
     // MARK: - Properties

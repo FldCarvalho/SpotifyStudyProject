@@ -9,6 +9,7 @@ import UIKit
 
 protocol NewReleasesPresentationLogic {
     func presentNewReleases(newAlbums: [Album])
+    func presentNewReleasesError(response: NewReleases.Releases.ResponseError)
 }
 
 class NewReleasesPresenter: NewReleasesPresentationLogic {
@@ -24,5 +25,10 @@ class NewReleasesPresenter: NewReleasesPresentationLogic {
             )
         }
         viewController?.displayNewReleases(viewModels: viewModels)
+    }
+    
+    func presentNewReleasesError(response: NewReleases.Releases.ResponseError) {
+        let viewModel = NewReleases.Releases.ViewModelError(status: response.status, message: response.message)
+        viewController?.displayNewReleasesError(viewModel: viewModel)
     }
 }
